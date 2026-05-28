@@ -1,7 +1,5 @@
-const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
+const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
-const fs = require('fs');
-const path = require('path');
 
 const garments = [
   { name: 'Polera', price: 3500 },
@@ -38,7 +36,9 @@ function calculate(garmentName, stamps, qty) {
   const details = [];
   
   stamps.forEach(s => {
-    const [w, h] = s.split('x').map(x => parseInt(x));
+    const parts = s.split('x');
+    const w = parseInt(parts[0]);
+    const h = parseInt(parts[1]);
     const sz = findSize(w, h);
     if (sz) {
       stampCost += sz.cost;
@@ -94,11 +94,7 @@ function parse(text) {
 }
 
 const client = new Client({
-  authStrategy: new LocalAuth(),
-  puppeteer: {
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--single-process']
-  }
+  authStrategy: new LocalAuth()
 });
 
 client.on('qr', qr => {
