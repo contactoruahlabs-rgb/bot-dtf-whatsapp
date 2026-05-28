@@ -1,8 +1,6 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 
-// ─── DATOS DE LA CALCULADORA DTF ───────────────────────────────────────────
-
 const garments = [
   { id: 'g1', name: 'Polera Básica', basePrice: 3500 },
   { id: 'g2', name: 'Buzo', basePrice: 6000 },
@@ -23,8 +21,6 @@ const dtfSizes = [
   { id: '3xl', w: 35, h: 35, cost: 4500 },
 ];
 
-// ─── FUNCIONES DE CÁLCULO ───────────────────────────────────────────────────
-
 function findGarment(name) {
   const search = name.toLowerCase().trim();
   return garments.find(g => 
@@ -43,7 +39,7 @@ function calculateDTFPrice(garmentName, stamps, quantity) {
     if (!garment) {
       const availableNames = garments.map(g => g.name).join(', ');
       return { 
-        error: `❌ Prenda no encontrada: "${garmentName}"\n\nDisponibles: ${availableNames}` 
+        error: 'Prenda no encontrada: ' + garmentName + '\n\nDisponibles: ' + availableNames
       };
     }
 
@@ -52,7 +48,9 @@ function calculateDTFPrice(garmentName, stamps, quantity) {
     const invalidStamps = [];
 
     stamps.forEach((dimension) => {
-      const [w, h] = dimension.split('x').map(x => parseInt(x.trim()));
+      const parts = dimension.split('x').map(x => parseInt(x.trim()));
+      const w = parts[0];
+      const h = parts[1];
       
       if (isNaN(w) || isNaN(h)) {
         invalidStamps.push(dimension);
@@ -61,20 +59,20 @@ function calculateDTFPrice(garmentName, stamps, quantity) {
 
       const dtf = findDTFSize(w, h);
       if (!dtf) {
-        invalidStamps.push(`${w}×${h}cm`);
+        invalidStamps.push(w + 'x' + h + 'cm');
       } else {
         totalStampCost += dtf.cost;
         stampDetails.push({
-          dimension: `${w}×${h}cm`,
+          dimension: w + 'x' + h + 'cm',
           cost: dtf.cost
         });
       }
     });
 
     if (invalidStamps.length > 0) {
-      const availableSizes = dtfSizes.map(s => `${s.w}×${s.h}cm`).join(', ');
+      const availableSizes = dtfSizes.map(s => s.w + 'x' + s.h + 'cm').join(', ');
       return {
-        error: `❌ Tamaños no válidos: ${invalidStamps.join(', ')}\n\nDisponibles: ${availableSizes}`
+        error: 'Tamaños no validos: ' + invalidStamps.join(', ') + '\n\nDisponibles: ' + availableSizes
       };
     }
 
@@ -97,7 +95,7 @@ function calculateDTFPrice(garmentName, stamps, quantity) {
       costPerStamp: stampDetails.length
     };
   } catch (error) {
-    return { error: `⚠️ Error: ${error.message}` };
+    return { error: 'Error: ' + error.message };
   }
 }
 
@@ -106,46 +104,39 @@ function formatResponse(result) {
     return result.error;
   }
 
-  const {
-    garment,
-    basePrice,
-    stampDetails,
-    totalStampCost,
-    unitPrice,
-    quantity,
-    totalPrice,
-    profitMargin,
-    finalPrice,
-    costPerStamp
-  } = result;
+  const garment = result.garment;
+  const basePrice = result.basePrice;
+  const stampDetails = result.stampDetails;
+  const totalStampCost = result.totalStampCost;
+  const unitPrice = result.unitPrice;
+  const quantity = result.quantity;
+  const totalPrice = result.totalPrice;
+  const profitMargin = result.profitMargin;
+  const finalPrice = result.finalPrice;
+  const costPerStamp = result.costPerStamp;
 
   let stampLine = '';
   if (stampDetails.length > 0) {
     stampLine = stampDetails
-      .map(s => `  • ${s.dimension}: $${s.cost.toLocaleString('es-CL')}`)
+      .map(s => '  + ' + s.dimension + ': $' + s.cost)
       .join('\n');
   }
 
-  return `✨ *COTIZACIÓN DTF - RUAH*
-
-📦 *${garment}*
-   Base: $${basePrice.toLocaleString('es-CL')}
-
-🎨 *Estampados (${costPerStamp}):*
-${stampLine}
-   Subtotal: $${totalStampCost.toLocaleString('es-CL')}
-
-━━━━━━━━━━━━━━━━━━━━━━
-💰 *Valor/unidad:* $${unitPrice.toLocaleString('es-CL')}
-📊 *Cantidad:* ${quantity} unid.
-
-*Costo producción:* $${totalPrice.toLocaleString('es-CL')}
-*Margen (15%):* $${profitMargin.toLocaleString('es-CL')}
-━━━━━━━━━━━━━━━━━━━━━━
-✅ *PRECIO VENTA:* $${finalPrice.toLocaleString('es-CL')}
-━━━━━━━━━━━━━━━━━━━━━━
-
-💡 *Formato:* "Prenda, 20x30 + 15x15, 10"`;
+  return '*COTIZACION DTF - RUAH*\n\n' +
+    '*Prenda:* ' + garment + '\n' +
+    'Base: $' + basePrice + '\n\n' +
+    '*Estampados (' + costPerStamp + '):*\n' +
+    stampLine + '\n' +
+    'Subtotal: $' + totalStampCost + '\n\n' +
+    '━━━━━━━━━━━━━━━━━━━\n' +
+    '*Valor/unidad:* $' + unitPrice + '\n' +
+    '*Cantidad:* ' + quantity + ' unid.\n\n' +
+    'Costo produccion: $' + totalPrice + '\n' +
+    'Margen (15%): $' + Math.round(profitMargin) + '\n' +
+    '━━━━━━━━━━━━━━━━━━━\n' +
+    '*PRECIO VENTA: $' + Math.round(finalPrice) + '*\n' +
+    '━━━━━━━━━━━━━━━━━━━\n\n' +
+    'Formato: "Prenda, 20x30 + 15x15, 10"';
 }
 
 function parseUserMessage(text) {
@@ -158,7 +149,7 @@ function parseUserMessage(text) {
 
   if (parts.length < 2) {
     return {
-      error: `❌ Formato inválido\n\nUsa: *Prenda, 20x30cm + 15x15cm, 10*\n\nEj:\n  Polera, 20x30 + 15x15, 10\n  Buzo, 25x25, 5\n  Gorro, 10x10 + 15x15, 20`
+      error: 'Formato invalido\n\nUsa: Prenda, 20x30 + 15x15, 10\n\nEj:\n  Polera, 20x30 + 15x15, 10\n  Buzo, 25x25, 5'
     };
   }
 
@@ -169,7 +160,7 @@ function parseUserMessage(text) {
   let match;
 
   while ((match = stampRegex.exec(stampText)) !== null) {
-    stamps.push(`${match[1]}x${match[2]}`);
+    stamps.push(match[1] + 'x' + match[2]);
   }
 
   const qtyText = parts[parts.length - 1];
@@ -178,14 +169,12 @@ function parseUserMessage(text) {
 
   if (!garmentName || stamps.length === 0 || quantity < 1) {
     return {
-      error: `❌ Datos incompletos. Necesitas:\n  • Nombre prenda\n  • Al menos 1 estampado\n  • Cantidad`
+      error: 'Datos incompletos. Necesitas:\n  - Nombre prenda\n  - Al menos 1 estampado\n  - Cantidad'
     };
   }
 
   return { garmentName, stamps, quantity };
 }
-
-// ─── CLIENTE WHATSAPP ──────────────────────────────────────────────────────
 
 const client = new Client({
   authStrategy: new LocalAuth(),
@@ -204,13 +193,6 @@ const client = new Client({
       '--disable-background-networking',
       '--disable-breakpad',
       '--disable-client-side-phishing-detection',
-      '--disable-component-extensions-with-background-pages',
-      '--disable-component-id-driven-feature-variations',
-      '--disable-component-update',
-      '--disable-default-apps',
-      '--disable-device-discovery-notifications',
-      '--disable-extensions',
-      '--disable-features=InterestFeedContentSuggestions',
       '--disable-sync'
     ]
   }
@@ -221,20 +203,18 @@ let isReady = false;
 client.on('qr', (qr) => {
   console.clear();
   console.log('\n╔════════════════════════════════╗');
-  console.log('║  🤖 BOT DTF RUAH LABS          ║');
+  console.log('║  BOT DTF RUAH LABS             ║');
   console.log('╚════════════════════════════════╝\n');
-  console.log('📱 Escanea este código QR:\n');
+  console.log('Escanea este codigo QR:\n');
   qrcode.generate(qr, { small: true });
-  console.log('\n✓ WhatsApp → Ajustes');
-  console.log('✓ Dispositivos vinculados');
-  console.log('✓ Escanea el código\n');
+  console.log('\nWhatsApp > Ajustes > Dispositivos vinculados > Escanea\n');
 });
 
 client.on('ready', () => {
   isReady = true;
   console.clear();
   console.log('\n╔════════════════════════════════╗');
-  console.log('║  ✅ BOT ACTIVO - ESPERANDO    ║');
+  console.log('║  BOT ACTIVO - ESPERANDO       ║');
   console.log('╚════════════════════════════════╝\n');
 });
 
@@ -244,14 +224,14 @@ client.on('message', async (message) => {
   const userText = message.body.trim();
   if (userText.length < 3) return;
 
-  console.log(`\n📨 ${message.from}: "${userText}"`);
+  console.log('\nMensaje: ' + userText);
 
   try {
     const parsed = parseUserMessage(userText);
 
     if (parsed.error) {
       await message.reply(parsed.error);
-      console.log('   ❌ Error de formato');
+      console.log('Error de formato');
       return;
     }
 
@@ -263,26 +243,26 @@ client.on('message', async (message) => {
 
     const response = formatResponse(result);
     await message.reply(response);
-    console.log(`   ✅ Cotización enviada`);
+    console.log('Cotizacion enviada');
 
     if (result.success) {
-      console.log(`   → ${result.garment}: $${result.finalPrice.toLocaleString('es-CL')}`);
+      console.log('> ' + result.garment + ': $' + Math.round(result.finalPrice));
     }
   } catch (error) {
-    console.error('   ⚠️ Error:', error.message);
-    await message.reply(`⚠️ Error: ${error.message}`);
+    console.error('Error: ' + error.message);
+    await message.reply('Error: ' + error.message);
   }
 });
 
 client.on('disconnected', () => {
   isReady = false;
-  console.log('\n⚠️ Bot desconectado');
+  console.log('\nBot desconectado');
   process.exit(0);
 });
 
 client.on('error', (error) => {
-  console.error('⚠️ Error:', error);
+  console.error('Error: ' + error.message);
 });
 
 client.initialize();
-console.log('\n⏳ Iniciando...\n');
+console.log('\nIniciando...\n');
