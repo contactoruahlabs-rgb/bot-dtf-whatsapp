@@ -1,20 +1,3 @@
-INSTRUCCIONES PARA CREAR EL ARCHIVO EN GITHUB DIRECTAMENTE
-===========================================================
-
-Ya que no puedes descargar, crea el archivo directamente en GitHub:
-
-PASO 1: Ve a tu repositorio en GitHub
-- github.com/tuusuario/bot-dtf-whatsapp
-
-PASO 2: Click en "Add file" → "Create new file"
-
-PASO 3: En el campo de nombre, escribe:
-bot-dtf-light.js
-
-PASO 4: Copia TODO el siguiente código en el editor (área grande):
-
----COMIENZA AQUÍ---
-
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 
