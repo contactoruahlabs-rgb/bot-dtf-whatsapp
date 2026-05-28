@@ -1,3 +1,6 @@
+const crypto = require('crypto');
+global.crypto = crypto;
+
 const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
 const fs = require('fs');
 const path = require('path');
