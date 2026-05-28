@@ -1,11 +1,10 @@
 {
   "name": "bot-dtf-whatsapp",
   "version": "1.0.0",
-  "description": "Bot de WhatsApp para calculadora DTF",
+  "description": "Bot DTF",
   "main": "bot-final.js",
   "scripts": {
-    "start": "node bot-dtf-light.js",
-    "dev": "nodemon bot-dtf-light.js"
+    "start": "node bot-final.js"
   },
   "dependencies": {
     "whatsapp-web.js": "^1.26.10",
